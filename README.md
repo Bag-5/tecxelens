@@ -92,13 +92,12 @@ Open **http://localhost:3000**.
 - Build command: `npm run build`
 - Install command: `npm install`
 
-### Render backend
+### Railway backend
 
-- Use the `render.yaml` at the repo root
-- The service root is `backend/`
-- Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- Use `backend/` as the service root
+- Railway will pick up `backend/railway.toml`
 - Optional env vars:
-  - `FRONTEND_ORIGIN` to lock CORS to your Vercel domain
+  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain
   - `OPENROUTER_API_KEY` for AI reports
   - `NVD_API_KEY` for higher NVD rate limits
 
