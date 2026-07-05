@@ -1,5 +1,3 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,16 +6,8 @@ from api.routes.upload import router as upload_router
 from api.routes.analyze import router as analyze_router
 from api.routes.knowledge import router as knowledge_router
 from core.config import API_VERSION, FRONTEND_ORIGIN
-from services.knowledge_service import init as init_knowledge
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_knowledge()
-    yield
-
-
-app = FastAPI(title="TECXE Lens", version=API_VERSION, lifespan=lifespan)
+app = FastAPI(title="TECXE Lens", version=API_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
