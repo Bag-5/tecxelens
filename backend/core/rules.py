@@ -1,0 +1,42 @@
+RULES = [
+    {
+        "id": "RULE_001",
+        "name": "Weak Password Policy",
+        "keywords": ["password", "passwd", "credential"],
+        "negations": ["12", "minimum 12", "at least 12", "complexity", "special character", "uppercase", "lowercase", "digit"],
+        "severity": "high",
+        "reference": "ISO 27001 A.9.2.1",
+    },
+    {
+        "id": "RULE_002",
+        "name": "MFA Not Enforced",
+        "keywords": ["authentication", "login", "access control", "identity"],
+        "negations": ["mfa", "multi-factor", "two-factor", "2fa", "otp", "authenticator"],
+        "severity": "high",
+        "reference": "ISO 27001 A.9.4.2",
+    },
+    {
+        "id": "RULE_003",
+        "name": "Shared Accounts Detected",
+        "keywords": ["shared account", "generic account", "common login", "shared credential", "group account"],
+        "negations": [],
+        "severity": "medium",
+        "reference": "ISO 27001 A.9.2.3",
+    },
+    {
+        "id": "RULE_004",
+        "name": "No Log Retention Policy",
+        "keywords": ["log", "logging", "audit", "event"],
+        "negations": ["retention", "retain", "store", "archive", "siem", "centralized", "backup", "duration", "30 day", "90 day"],
+        "severity": "medium",
+        "reference": "ISO 27001 A.12.4.1",
+    },
+    {
+        "id": "RULE_005",
+        "name": "Weak Authentication Mechanism",
+        "keywords": ["authentication", "auth", "authenticate", "login"],
+        "negations": ["oauth", "saml", "ldap", "certificate", "pkcs", "token", "smart card", "biometric", "kerberos", "radius"],
+        "severity": "high",
+        "reference": "ISO 27001 A.9.4.2",
+    },
+]
