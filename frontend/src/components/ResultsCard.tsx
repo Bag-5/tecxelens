@@ -84,9 +84,9 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
   );
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       <div className={`flex flex-col items-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-        <div className="relative w-48 h-48">
+        <div className="relative w-40 h-40 sm:w-48 sm:h-48">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 180 180">
             <circle cx="90" cy="90" r="80" fill="none" stroke="currentColor" strokeWidth="6" className="text-gray-200 dark:text-white/5" />
             <circle ref={ringRef} cx="90" cy="90" r="80" fill="none" stroke={meta.color} strokeWidth="6" strokeLinecap="round"
@@ -96,13 +96,13 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-5xl font-bold text-gray-900 dark:text-white">{animatedScore}</span>
+            <span className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">{animatedScore}</span>
             <span className="mt-1 text-xs font-semibold uppercase tracking-widest" style={{ color: meta.color }}>{meta.label}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: "Total Findings", value: findings.length, cl: "text-gray-900 dark:text-white" },
           { label: "Critical", value: grouped.critical?.length || 0, cl: "text-red-700 dark:text-red-300" },
@@ -110,9 +110,9 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
           { label: "Medium", value: grouped.medium?.length || 0, cl: "text-yellow-600 dark:text-yellow-400" },
           { label: "Low", value: grouped.low?.length || 0, cl: "text-green-600 dark:text-green-400" },
         ].map((item) => (
-          <div key={item.label} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] p-5 text-center transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.07] hover:border-gray-300 dark:hover:border-white/20 hover:scale-[1.02]">
+          <div key={item.label} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] p-4 sm:p-5 text-center transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.07] hover:border-gray-300 dark:hover:border-white/20 hover:scale-[1.02]">
             <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">{item.label}</p>
-            <p className={`text-3xl font-bold mt-1 ${item.cl}`}>{item.value}</p>
+            <p className={`text-2xl sm:text-3xl font-bold mt-1 ${item.cl}`}>{item.value}</p>
           </div>
         ))}
       </div>
@@ -123,10 +123,10 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
           <div className="space-y-4">
             {SEVERITY_ORDER.flatMap((severity) =>
               (grouped[severity] || []).map((f, i) => (
-                <div key={`${severity}-${i}`} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.06]">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{f.title}</h3>
-                    <span className={`shrink-0 ml-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${severityBadge(f.severity)}`}>
+                <div key={`${severity}-${i}`} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 sm:p-5 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.06]">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg sm:text-base leading-tight">{f.title}</h3>
+                    <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${severityBadge(f.severity)}`}>
                       {f.severity}
                     </span>
                   </div>
@@ -147,7 +147,7 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
                       <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Known Vulnerabilities (NVD)</p>
                       <div className="space-y-1.5">
                         {f.cves.map((cve) => (
-                          <div key={cve.id} className="flex items-center gap-2 rounded-md bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 px-3 py-2">
+                          <div key={cve.id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 px-3 py-2">
                             <span className={`text-xs font-mono font-bold ${cvssColor(cve.cvss_score)}`}>
                               {cve.cvss_score !== null ? cve.cvss_score.toFixed(1) : "--"}
                             </span>
@@ -162,7 +162,7 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
                               </a>
                               <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{cve.description}</p>
                             </div>
-                            <span className={`shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${cvssBadge(cve.severity)}`}>
+                            <span className={`self-start sm:self-auto shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${cvssBadge(cve.severity)}`}>
                               {cve.severity}
                             </span>
                           </div>
@@ -174,11 +174,13 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
                   {f.references && f.references.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {f.references.map((ref, ri) => (
-                        <span key={ri} className="inline-flex items-center gap-1 rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] px-2.5 py-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        <span key={ri} className="inline-flex items-center gap-1 rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] px-2.5 py-1 text-[11px] text-gray-500 dark:text-gray-400 max-w-full">
                           <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                           </svg>
-                          {ref.document.split("\\").pop()?.replace(".pdf", "")} — {ref.section}
+                          <span className="truncate">
+                            {ref.document.split("\\").pop()?.replace(/\.(pdf|pptx|txt)$/i, "")} — {ref.section}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -196,7 +198,7 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Executive Summary</h2>
             <span className="rounded-full border border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 text-[10px] font-medium tracking-wider text-indigo-600 dark:text-indigo-300 uppercase">AI</span>
           </div>
-          <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-6 text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-all hover:border-gray-300 dark:hover:border-white/20">
+          <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 sm:p-6 text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-all hover:border-gray-300 dark:hover:border-white/20">
             {summary}
           </div>
         </div>

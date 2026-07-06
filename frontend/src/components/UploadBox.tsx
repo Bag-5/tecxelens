@@ -50,7 +50,7 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       onClick={() => {
         if (!disabled) inputRef.current?.click();
       }}
-      className={`relative rounded-xl p-14 text-center transition-all overflow-hidden ${
+      className={`relative rounded-xl p-8 sm:p-10 lg:p-14 text-center transition-all overflow-hidden ${
         disabled
           ? "border border-gray-200 dark:border-white/5 bg-gray-100 dark:bg-white/5 cursor-not-allowed opacity-50"
           : dragOver
@@ -61,7 +61,7 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf"
+        accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation"
         className="hidden"
         disabled={disabled}
         onChange={(e) => {
@@ -86,7 +86,7 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       <p className="mt-3 text-base font-medium text-gray-700 dark:text-gray-300">
         Drop your document here or click to browse
       </p>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">.pdf, .txt, .pptx</p>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">PDF, TXT, or PowerPoint</p>
     </div>
   );
 }
