@@ -86,7 +86,7 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
   return (
     <div className="space-y-8 sm:space-y-10">
       <div className={`flex flex-col items-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48">
+        <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 180 180">
             <circle cx="90" cy="90" r="80" fill="none" stroke="currentColor" strokeWidth="6" className="text-gray-200 dark:text-white/5" />
             <circle ref={ringRef} cx="90" cy="90" r="80" fill="none" stroke={meta.color} strokeWidth="6" strokeLinecap="round"
@@ -96,7 +96,7 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">{animatedScore}</span>
+            <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">{animatedScore}</span>
             <span className="mt-1 text-xs font-semibold uppercase tracking-widest" style={{ color: meta.color }}>{meta.label}</span>
           </div>
         </div>
