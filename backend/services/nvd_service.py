@@ -79,43 +79,49 @@ async def search_cves(keyword: str, top_k: int = 3) -> list[dict]:
     if keyword_lower in _cache:
         return _cache[keyword_lower][:top_k]
 
-    try:
-        params = {
-            "keywordSearch": keyword,
-            "resultsPerPage": 10,
-        }
-        headers = {}
-        if NVD_API_KEY:
-            headers["apiKey"] = NVD_API_KEY
+    api_keys_to_try = [NVD_API_KEY] if NVD_API_KEY else [""]
+    if NVD_API_KEY:
+        api_keys_to_try.append("")
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(
-                "https://services.nvd.nist.gov/rest/json/cves/2.0",
-                params=params,
-                headers=headers,
-            )
+    for api_key in api_keys_to_try:
+        try:
+            params = {
+                "keywordSearch": keyword,
+                "resultsPerPage": 10,
+            }
+            headers = {"User-Agent": "TECXE-Lens/1.0"}
+            if api_key:
+                headers["apiKey"] = api_key
 
-        if resp.status_code != 200:
-            _cache[keyword_lower] = []
-            return []
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.get(
+                    "https://services.nvd.nist.gov/rest/json/cves/2.0",
+                    params=params,
+                    headers=headers,
+                )
 
-        data = resp.json()
-        vulnerabilities = data.get("vulnerabilities", [])
+            if resp.status_code != 200:
+                continue
 
-        results: list[dict] = []
-        for item in vulnerabilities:
-            parsed = _parse_cve(item)
-            if parsed:
-                results.append(parsed)
-                if len(results) >= top_k:
-                    break
+            data = resp.json()
+            vulnerabilities = data.get("vulnerabilities", [])
 
-        _cache[keyword_lower] = results
-        return results
+            results: list[dict] = []
+            for item in vulnerabilities:
+                parsed = _parse_cve(item)
+                if parsed:
+                    results.append(parsed)
+                    if len(results) >= top_k:
+                        break
 
-    except Exception:
-        _cache[keyword_lower] = []
-        return []
+            _cache[keyword_lower] = results
+            return results
+
+        except Exception:
+            continue
+
+    _cache[keyword_lower] = []
+    return []
 
 
 def extract_tech_keywords(text: str) -> list[str]:
