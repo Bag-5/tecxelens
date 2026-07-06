@@ -5,3 +5,4 @@ pypdf
 httpx
 python-multipart
 python-pptx
+python-docx

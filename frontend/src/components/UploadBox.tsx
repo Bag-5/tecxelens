@@ -17,14 +17,15 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       const allowed = [
         "application/pdf",
         "text/plain",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ];
       const name = file.name.toLowerCase();
       const matchesAllowedExtension =
-        name.endsWith(".pdf") || name.endsWith(".txt") || name.endsWith(".pptx");
+        name.endsWith(".pdf") || name.endsWith(".txt") || name.endsWith(".docx") || name.endsWith(".pptx");
 
       if (!allowed.includes(file.type) && !matchesAllowedExtension) {
-        alert("Please upload a PDF, TXT, or PPTX file.");
+        alert("Please upload a PDF, TXT, DOCX, or PPTX file.");
         return;
       }
       onFileSelected(file);
@@ -61,7 +62,7 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        accept=".pdf,.txt,.docx,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation"
         className="hidden"
         disabled={disabled}
         onChange={(e) => {
@@ -86,7 +87,7 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
       <p className="mt-3 text-base font-medium text-gray-700 dark:text-gray-300">
         Drop your document here or click to browse
       </p>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">PDF, TXT, or PowerPoint</p>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">PDF, TXT, DOCX, or PowerPoint</p>
     </div>
   );
 }

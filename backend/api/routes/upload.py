@@ -6,7 +6,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 router = APIRouter()
 
 STORAGE_DIR = Path("storage") / "uploads"
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".pptx"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".pptx", ".docx"}
 
 
 @router.post("/upload")
@@ -17,7 +17,7 @@ async def upload_file(file: UploadFile = File(...)):
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail="Only PDF, TXT, and PPTX files are supported.",
+            detail="Only PDF, TXT, DOCX, and PPTX files are supported.",
         )
 
     file_id = str(uuid.uuid4())

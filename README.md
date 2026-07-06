@@ -105,6 +105,7 @@ Open **http://localhost:3000**.
 
 - PDF: `.pdf`
 - Text: `.txt`
+- Word: `.docx`
 - PowerPoint: `.pptx`
 
 Repeated uploads of the same file content are cached by file hash so the backend can return the previous analysis without re-running the AI report.

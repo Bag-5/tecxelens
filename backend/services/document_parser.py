@@ -5,6 +5,11 @@ import xml.etree.ElementTree as ET
 from pypdf import PdfReader
 
 try:
+    from docx import Document
+except ImportError:  # pragma: no cover
+    Document = None
+
+try:
     from pptx import Presentation
 except ImportError:  # pragma: no cover
     Presentation = None
@@ -38,6 +43,19 @@ def _read_pptx(path: Path) -> str:
     return "\n".join(parts)
 
 
+def _read_docx(path: Path) -> str:
+    if Document is None:
+        raise RuntimeError("python-docx is required for Word document uploads")
+
+    doc = Document(str(path))
+    parts: list[str] = []
+    for paragraph in doc.paragraphs:
+        text = paragraph.text.strip()
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
+
+
 def parse_document(file_path: str | Path) -> dict:
     path = Path(file_path)
     suffix = path.suffix.lower()
@@ -46,6 +64,11 @@ def parse_document(file_path: str | Path) -> dict:
         text = _read_pdf(path)
     elif suffix == ".txt":
         text = _read_text_file(path)
+    elif suffix == ".docx":
+        try:
+            text = _read_docx(path)
+        except (BadZipFile, KeyError, RuntimeError) as exc:
+            raise RuntimeError(f"Failed to read Word document: {exc}") from exc
     elif suffix == ".pptx":
         try:
             text = _read_pptx(path)
