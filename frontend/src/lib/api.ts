@@ -47,7 +47,7 @@ async function request<T>(
   try {
     const res = await fetch(`${BASE_URL}${url}`, {
       ...init,
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(120_000),
     });
 
     if (!res.ok) {
@@ -60,7 +60,10 @@ async function request<T>(
     return { success: true, data };
   } catch (err: unknown) {
     if (err instanceof DOMException && err.name === "TimeoutError") {
-      return { success: false, error: "Request timed out. Backend may be unavailable." };
+      return {
+        success: false,
+        error: "Analysis is taking longer than expected. Please keep this tab open and try again in a moment.",
+      };
     }
     if (err instanceof TypeError && err.message === "Failed to fetch") {
       return { success: false, error: "Network error — is the backend running?" };

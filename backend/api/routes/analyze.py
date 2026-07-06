@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 from pathlib import Path
@@ -110,16 +111,19 @@ async def analyze_file(body: AnalyzeRequest):
     risk_level = scoring["risk_level"]
 
     enriched = []
-    for f in raw_findings:
-        refs = _gather_finding_references(f)
-        cves = await _enrich_with_cves(f, parsed["text"])
-        enriched.append({
-            "title": f["title"],
-            "severity": f["severity"],
-            "rule_reference": f["reference"],
+    async def _build_enriched_finding(finding: dict) -> dict:
+        refs = _gather_finding_references(finding)
+        cves = await _enrich_with_cves(finding, parsed["text"])
+        return {
+            "title": finding["title"],
+            "severity": finding["severity"],
+            "rule_reference": finding["reference"],
             "references": refs,
             "cves": cves,
-        })
+        }
+
+    if raw_findings:
+        enriched = await asyncio.gather(*(_build_enriched_finding(f) for f in raw_findings))
 
     ai_result = await generate_report(enriched, parsed["text"])
 

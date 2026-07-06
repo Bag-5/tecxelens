@@ -62,6 +62,7 @@ export default function UploadPage() {
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Upload Document</h1>
           <p className="mt-1.5 text-sm sm:text-base text-gray-500 dark:text-gray-400">Drop a compliance PDF, TXT, or PPTX to begin analysis</p>
+          <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-500">Large files or first-time analyses can take a little longer.</p>
         </div>
 
         {loading ? (
