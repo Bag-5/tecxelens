@@ -22,15 +22,17 @@ const icons: Record<string, React.ReactNode> = {
 
 export default function ThemeToggle() {
   const { resolved, theme, cycle } = useTheme();
+  const label = theme === "system" ? `Auto (${resolved})` : theme;
 
   return (
     <button
       onClick={cycle}
       title={`Theme: ${theme} (click to cycle)`}
-      className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-2.5 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+      aria-label={`Theme selector, current ${label}`}
+      className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
     >
       {icons[theme]}
-      <span className="capitalize">{theme === "system" ? (resolved === "dark" ? "Auto" : "Auto") : theme}</span>
+      <span className="capitalize">{label}</span>
     </button>
   );
 }

@@ -46,6 +46,15 @@
   50% { border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 0 25px rgba(99, 102, 241, 0.25); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .animate-rotate3d { animation: rotate3d 4s linear infinite; }
 .animate-rotate3d-reverse { animation: rotate3d-reverse 5s linear infinite; }
 .animate-rotate3d-slow { animation: rotate3d-slow 7s linear infinite; }
@@ -56,3 +65,21 @@
 .animate-border-glow { animation: border-glow 2s ease-in-out infinite; }
 
 .perspective-\[800px\] { perspective: 800px; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.08), transparent 26%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.5), transparent 20%);
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 24%),
+    linear-gradient(to bottom, rgba(10, 10, 15, 0.96), rgba(10, 10, 15, 1));
+}

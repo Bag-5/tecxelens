@@ -120,10 +120,10 @@ export default function ResultsCard({ overallScore, riskLevel, findings, summary
       {findings.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Findings</h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {SEVERITY_ORDER.flatMap((severity) =>
               (grouped[severity] || []).map((f, i) => (
-                <div key={`${severity}-${i}`} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 sm:p-5 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.06]">
+                <div key={`${severity}-${i}`} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 sm:p-5 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/[0.06] shadow-[0_1px_0_rgba(255,255,255,0.02)]">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                     <h3 className="font-semibold text-gray-900 dark:text-white text-lg sm:text-base leading-tight">{f.title}</h3>
                     <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${severityBadge(f.severity)}`}>
