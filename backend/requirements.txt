@@ -4,3 +4,4 @@ python-dotenv
 pypdf
 httpx
 python-multipart
+python-pptx

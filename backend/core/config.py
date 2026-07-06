@@ -13,4 +13,8 @@ OPENROUTER_FALLBACK_MODEL = os.getenv("OPENROUTER_FALLBACK_MODEL", "google/gemma
 KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "knowledge"
 
 NVD_API_KEY = os.getenv("NVD_API_KEY", "")
-FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "*")
+
+_frontend_origin = os.getenv("FRONTEND_ORIGIN", "*").strip()
+FRONTEND_ORIGINS = [origin.strip() for origin in _frontend_origin.split(",") if origin.strip()]
+if not FRONTEND_ORIGINS:
+    FRONTEND_ORIGINS = ["*"]

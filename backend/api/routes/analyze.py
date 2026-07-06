@@ -1,10 +1,12 @@
+import hashlib
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from services.ai_service import generate_report
-from services.pdf_parser import parse_pdf
+from services.document_parser import parse_document
 from services.rule_engine import evaluate
 from services.knowledge_service import search as knowledge_search
 from services.nvd_service import search_cves, extract_tech_keywords
@@ -13,6 +15,7 @@ from services.scoring_engine import compute_score
 router = APIRouter()
 
 STORAGE_DIR = Path("storage") / "uploads"
+CACHE_DIR = Path("storage") / "analysis_cache"
 
 
 class AnalyzeRequest(BaseModel):
@@ -31,6 +34,36 @@ def _gather_finding_references(finding: dict) -> list[dict]:
         seen.add(key)
         refs.append({"document": r["document"], "section": r["section"]})
     return refs[:3]
+
+
+def _hash_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _cache_path(file_hash: str) -> Path:
+    return CACHE_DIR / f"{file_hash}.json"
+
+
+def _load_cached_analysis(file_hash: str) -> dict | None:
+    path = _cache_path(file_hash)
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def _save_cached_analysis(file_hash: str, payload: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _cache_path(file_hash).write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 async def _enrich_with_cves(finding: dict, doc_text: str) -> list[dict]:
@@ -64,7 +97,12 @@ async def analyze_file(body: AnalyzeRequest):
         )
 
     file_path = uploaded_files[0]
-    parsed = parse_pdf(file_path)
+    file_hash = _hash_file(file_path)
+    cached = _load_cached_analysis(file_hash)
+    if cached:
+        return cached
+
+    parsed = parse_document(file_path)
     raw_findings = evaluate(parsed["text"])
 
     scoring = compute_score(raw_findings)
@@ -97,9 +135,11 @@ async def analyze_file(body: AnalyzeRequest):
             "cves": f["cves"],
         })
 
-    return {
+    response = {
         "summary": ai_result["summary"],
         "overall_score": overall_score,
         "risk_level": risk_level,
         "findings": findings_out,
     }
+    _save_cached_analysis(file_hash, response)
+    return response

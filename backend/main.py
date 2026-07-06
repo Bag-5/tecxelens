@@ -5,13 +5,13 @@ from api.routes.health import router as health_router
 from api.routes.upload import router as upload_router
 from api.routes.analyze import router as analyze_router
 from api.routes.knowledge import router as knowledge_router
-from core.config import API_VERSION, FRONTEND_ORIGIN
+from core.config import API_VERSION, FRONTEND_ORIGINS
 
 app = FastAPI(title="TECXE Lens", version=API_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN] if FRONTEND_ORIGIN != "*" else ["*"],
+    allow_origins=FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

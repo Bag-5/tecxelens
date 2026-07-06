@@ -14,8 +14,17 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
   const handleFile = useCallback(
     (file: File) => {
       if (disabled) return;
-      if (file.type !== "application/pdf") {
-        alert("Please upload a PDF file.");
+      const allowed = [
+        "application/pdf",
+        "text/plain",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ];
+      const name = file.name.toLowerCase();
+      const matchesAllowedExtension =
+        name.endsWith(".pdf") || name.endsWith(".txt") || name.endsWith(".pptx");
+
+      if (!allowed.includes(file.type) && !matchesAllowedExtension) {
+        alert("Please upload a PDF, TXT, or PPTX file.");
         return;
       }
       onFileSelected(file);
@@ -75,9 +84,9 @@ export default function UploadBox({ onFileSelected, disabled }: Props) {
         />
       </svg>
       <p className="mt-3 text-base font-medium text-gray-700 dark:text-gray-300">
-        Drop your PDF here or click to browse
+        Drop your document here or click to browse
       </p>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">.pdf only</p>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">.pdf, .txt, .pptx</p>
     </div>
   );
 }

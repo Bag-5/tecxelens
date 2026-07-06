@@ -97,9 +97,17 @@ Open **http://localhost:3000**.
 - Use `backend/` as the service root
 - Railway will pick up `backend/railway.toml`
 - Optional env vars:
-  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain
+  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`
   - `OPENROUTER_API_KEY` for AI reports
   - `NVD_API_KEY` for higher NVD rate limits
+
+### Supported uploads
+
+- PDF: `.pdf`
+- Text: `.txt`
+- PowerPoint: `.pptx`
+
+Repeated uploads of the same file content are cached by file hash so the backend can return the previous analysis without re-running the AI report.
 
 ---
 

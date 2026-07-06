@@ -7,3 +7,4 @@ backend/.env
 frontend/.env
 frontend/.env.local
 backend/storage/uploads/
+backend/storage/analysis_cache/
