@@ -47,9 +47,9 @@ export default function UploadPage() {
     setPhase("done");
     busy.current = false;
 
-    router.push(
-      `/results?data=${encodeURIComponent(JSON.stringify(result.data))}`
-    );
+    const resultId = crypto.randomUUID();
+    sessionStorage.setItem(`tecxelens-result:${resultId}`, JSON.stringify(result.data));
+    router.push(`/results?result=${resultId}`);
   };
 
   const loading = phase === "uploading" || phase === "analyzing";

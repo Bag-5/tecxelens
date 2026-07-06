@@ -22,7 +22,10 @@ function Skeleton() {
 function ResultsContent() {
   const params = useSearchParams();
 
-  const rawData = params.get("data");
+  const resultId = params.get("result");
+  const rawData =
+    (resultId ? sessionStorage.getItem(`tecxelens-result:${resultId}`) : null) ||
+    params.get("data");
 
   if (!rawData) {
     return (
@@ -40,6 +43,9 @@ function ResultsContent() {
     return (
       <div className="max-w-4xl mx-auto mt-16 sm:mt-20 px-4 sm:px-6 text-center">
         <p className="text-gray-500 dark:text-gray-400">Could not load results. Please try again.</p>
+        <div className="mt-4">
+          <Link href="/upload" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Go back to upload</Link>
+        </div>
       </div>
     );
   }
