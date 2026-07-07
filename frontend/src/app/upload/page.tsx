@@ -48,7 +48,7 @@ export default function UploadPage() {
     busy.current = false;
 
     const resultId = crypto.randomUUID();
-    sessionStorage.setItem(`tecxelens-result:${resultId}`, JSON.stringify(result.data));
+    try { sessionStorage.setItem(`tecxelens-result:${resultId}`, JSON.stringify(result.data)); } catch { /* fallback to URL param below */ }
     router.push(`/results?result=${resultId}`);
   };
 

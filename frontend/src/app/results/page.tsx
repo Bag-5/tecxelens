@@ -23,9 +23,18 @@ function ResultsContent() {
   const params = useSearchParams();
 
   const resultId = params.get("result");
-  const rawData =
-    (resultId ? sessionStorage.getItem(`tecxelens-result:${resultId}`) : null) ||
-    params.get("data");
+  const urlData = params.get("data");
+
+  let rawData: string | null = null;
+  let fromUrl = false;
+
+  if (resultId) {
+    try { rawData = sessionStorage.getItem(`tecxelens-result:${resultId}`); } catch { /* private/restricted mode */ }
+  }
+  if (!rawData && urlData) {
+    rawData = urlData;
+    fromUrl = true;
+  }
 
   if (!rawData) {
     return (
@@ -38,7 +47,7 @@ function ResultsContent() {
 
   let data: AnalyzeResult;
   try {
-    data = JSON.parse(decodeURIComponent(rawData));
+    data = JSON.parse(fromUrl ? decodeURIComponent(rawData) : rawData);
   } catch {
     return (
       <div className="max-w-4xl mx-auto mt-16 sm:mt-20 px-4 sm:px-6 text-center">

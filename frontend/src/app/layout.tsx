@@ -31,6 +31,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem("tecxe-theme")||"system";if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-gray-50 dark:bg-[#0a0a0f] text-gray-900 dark:text-gray-200 transition-colors overflow-x-hidden">
         <ThemeProvider>
           <header className="sticky top-0 z-50 border-b border-gray-200/60 dark:border-white/5 bg-white/80 dark:bg-black/40 backdrop-blur-xl transition-colors">
