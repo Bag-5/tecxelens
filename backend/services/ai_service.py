@@ -57,12 +57,12 @@ async def generate_report(findings: list[dict], text: str) -> dict:
 
     for model in models:
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=90.0) as client:
                 body = {
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.3,
-                    "max_tokens": 2000,
+                    "max_tokens": 1200,
                 }
 
                 resp = await client.post(
