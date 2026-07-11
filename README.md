@@ -92,15 +92,14 @@ Open **http://localhost:3000**.
 - Build command: `npm run build`
 - Install command: `npm install`
 
-### Hugging Face backend
+### Render backend
 
-- Create a new Hugging Face Space with the `Docker` SDK
-- Deploy the code from `backend/`
-- The backend listens on port `7860`
-- Add secrets in Space settings:
+- Use `backend/` as the service root
+- Render will pick up [`render.yaml`](./render.yaml)
+- Optional env vars:
+  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`
   - `OPENROUTER_API_KEY` for AI reports
   - `NVD_API_KEY` for higher NVD rate limits
-  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`
 
 ### Supported uploads
 
