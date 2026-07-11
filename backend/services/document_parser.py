@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from zipfile import BadZipFile
 import xml.etree.ElementTree as ET
 
@@ -22,7 +23,13 @@ def _read_text_file(path: Path) -> str:
 def _read_pdf(path: Path) -> str:
     reader = PdfReader(path)
     parts: list[str] = []
-    for page in reader.pages:
+    max_pages_raw = os.getenv("MAX_PDF_PAGES", "50").strip()
+    try:
+        max_pages = max(1, int(max_pages_raw))
+    except ValueError:
+        max_pages = 50
+
+    for page in reader.pages[:max_pages]:
         extracted = page.extract_text()
         if extracted:
             parts.append(extracted)
