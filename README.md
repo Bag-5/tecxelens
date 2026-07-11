@@ -88,18 +88,19 @@ Open **http://localhost:3000**.
 ### Vercel frontend
 
 - Set the project root to `frontend/`
-- Add `NEXT_PUBLIC_API_URL` in the Vercel environment variables and point it at the Render backend URL
+- Add `NEXT_PUBLIC_API_URL` in the Vercel environment variables and point it at the backend Space URL
 - Build command: `npm run build`
 - Install command: `npm install`
 
-### Railway backend
+### Hugging Face backend
 
-- Use `backend/` as the service root
-- Railway will pick up `backend/railway.toml`
-- Optional env vars:
-  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`
+- Create a new Hugging Face Space with the `Docker` SDK
+- Deploy the code from `backend/`
+- The backend listens on port `7860`
+- Add secrets in Space settings:
   - `OPENROUTER_API_KEY` for AI reports
   - `NVD_API_KEY` for higher NVD rate limits
+  - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`
 
 ### Supported uploads
 
