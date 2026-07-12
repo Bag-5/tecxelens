@@ -92,12 +92,12 @@ Open **http://localhost:3000**.
 - Build command: `npm run build`
 - Install command: `npm install`
 
-### Hugging Face backend
+### Replit backend
 
-- Create a new Hugging Face Space with the `Docker` SDK
-- Deploy the code from `backend/`
-- The backend listens on port `7860`
-- Add secrets in Space settings:
+- Run the backend from the repo root with the included [`.replit`](./.replit) config
+- The backend starts from `backend/` using `uvicorn main:app`
+- Replit should expose port `8000`
+- Add secrets in the Replit environment:
   - `OPENROUTER_API_KEY` for AI reports
   - `NVD_API_KEY` for higher NVD rate limits
   - `FRONTEND_ORIGIN` to lock CORS to your frontend domain, for example `https://tecxelens.vercel.app`

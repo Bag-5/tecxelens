@@ -1,12 +1,12 @@
 # TECXE Lens — Backend
 
-Python 3.12+ FastAPI server. The backend is ready to run as a Hugging Face Docker Space.
+Python 3.12+ FastAPI server. The backend is ready to run on Replit.
 
-To deploy on Hugging Face Spaces:
+To deploy on Replit:
 
-1. Create a new Space and choose the `Docker` SDK.
-2. Set the repository root to this `backend/` folder contents.
-3. Add any required secrets in Space settings, especially `OPENROUTER_API_KEY`.
-4. Let the Space build from [`backend/Dockerfile`](./Dockerfile).
+1. Open the repo in Replit.
+2. Use the root [`.replit`](../.replit) file to start `uvicorn` from `backend/`.
+3. Add required secrets in the Replit Secrets panel, especially `OPENROUTER_API_KEY`.
+4. Replit should expose port `8000`.
 
-The app listens on port `7860`, which matches the default Hugging Face Docker Space port.
+The app exposes `/health` for health checks.
