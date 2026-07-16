@@ -48,7 +48,10 @@ export default function UploadPage() {
     busy.current = false;
 
     const resultId = crypto.randomUUID();
-    try { sessionStorage.setItem(`tecxelens-result:${resultId}`, JSON.stringify(result.data)); } catch { /* fallback to URL param below */ }
+    try {
+      sessionStorage.setItem(`tecxelens-result:${resultId}`, JSON.stringify(result.data));
+      sessionStorage.setItem(`tecxelens-file:${resultId}`, uploaded.data.file_id);
+    } catch { /* fallback — download button won't appear */ }
     router.push(`/results?result=${resultId}`);
   };
 

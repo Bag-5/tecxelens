@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import ResultsCard from "@/components/ResultsCard";
+import DownloadReportButton from "@/components/DownloadReportButton";
 import type { AnalyzeResult, Finding } from "@/lib/api";
 
 function Skeleton() {
@@ -26,10 +27,14 @@ function ResultsContent() {
   const urlData = params.get("data");
 
   let rawData: string | null = null;
+  let fileId: string | null = null;
   let fromUrl = false;
 
   if (resultId) {
-    try { rawData = sessionStorage.getItem(`tecxelens-result:${resultId}`); } catch { /* private/restricted mode */ }
+    try {
+      rawData = sessionStorage.getItem(`tecxelens-result:${resultId}`);
+      fileId = sessionStorage.getItem(`tecxelens-file:${resultId}`);
+    } catch { /* private/restricted mode */ }
   }
   if (!rawData && urlData) {
     rawData = urlData;
@@ -63,7 +68,10 @@ function ResultsContent() {
     <div className="max-w-4xl mx-auto mt-8 sm:mt-12 px-4 sm:px-6 pb-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">Analysis Results</h1>
-        <Link href="/upload" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Analyze another</Link>
+        <div className="flex items-center gap-3">
+          {fileId && <DownloadReportButton fileId={fileId} />}
+          <Link href="/upload" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Analyze another</Link>
+        </div>
       </div>
       <ResultsCard overallScore={data.overall_score} riskLevel={data.risk_level} findings={data.findings} summary={data.summary} />
     </div>
