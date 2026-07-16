@@ -1,4 +1,3 @@
-import hashlib
 import json
 import tempfile
 from pathlib import Path
@@ -11,7 +10,6 @@ from services.report_generator import generate_report
 
 router = APIRouter()
 
-STORAGE_DIR = Path("storage") / "uploads"
 CACHE_DIR = Path("storage") / "analysis_cache"
 
 
@@ -19,31 +17,29 @@ class ReportRequest(BaseModel):
     file_id: str
 
 
-def _hash_file(path: Path) -> str:
-    hasher = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
-
-
 @router.post("/report")
 async def generate_pdf_report(body: ReportRequest):
-    uploaded_files = list(STORAGE_DIR.glob(f"{body.file_id}_*"))
-    if not uploaded_files:
+    mapping_path = CACHE_DIR / "_by_id" / f"{body.file_id}.json"
+    if not mapping_path.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"File with id '{body.file_id}' not found",
+            detail="Analysis data not found. Upload and analyze a file first.",
         )
 
-    file_path = uploaded_files[0]
-    file_hash = _hash_file(file_path)
-    cache_path = CACHE_DIR / f"{file_hash}.json"
+    try:
+        mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+        file_hash = mapping["file_hash"]
+    except (json.JSONDecodeError, KeyError):
+        raise HTTPException(
+            status_code=500,
+            detail="Analysis mapping is corrupt. Re-analyze the file.",
+        )
 
+    cache_path = CACHE_DIR / f"{file_hash}.json"
     if not cache_path.exists():
         raise HTTPException(
             status_code=409,
-            detail="No analysis found for this file. Run /analyze first.",
+            detail="Cached analysis data is missing. Re-analyze the file.",
         )
 
     try:
@@ -58,18 +54,16 @@ async def generate_pdf_report(body: ReportRequest):
         tmp_path = Path(tmp.name)
 
     try:
-        generate_report(data, file_path.name, tmp_path)
+        generate_report(data, "analysis", tmp_path)
         pdf_bytes = tmp_path.read_bytes()
     finally:
         tmp_path.unlink(missing_ok=True)
-
-    safe_name = file_path.stem.replace(" ", "_") + "_report.pdf"
 
     return StreamingResponse(
         iter([pdf_bytes]),
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="{safe_name}"',
+            "Content-Disposition": 'attachment; filename="compliance_report.pdf"',
             "Content-Length": str(len(pdf_bytes)),
         },
     )

@@ -67,6 +67,15 @@ def _save_cached_analysis(file_hash: str, payload: dict) -> None:
     )
 
 
+def _save_file_id_mapping(file_id: str, file_hash: str) -> None:
+    mapping_dir = CACHE_DIR / "_by_id"
+    mapping_dir.mkdir(parents=True, exist_ok=True)
+    (mapping_dir / f"{file_id}.json").write_text(
+        json.dumps({"file_hash": file_hash}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
 async def _enrich_with_cves(finding: dict, doc_text: str) -> list[dict]:
     combined = f"{finding['title']} {finding['reference']} {doc_text}"
     tech_kws = extract_tech_keywords(combined)
@@ -146,4 +155,5 @@ async def analyze_file(body: AnalyzeRequest):
         "findings": findings_out,
     }
     _save_cached_analysis(file_hash, response)
+    _save_file_id_mapping(body.file_id, file_hash)
     return response
