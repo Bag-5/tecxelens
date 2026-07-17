@@ -276,7 +276,7 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
     score = data["overall_score"]
     risk = data["risk_level"]
     sc = _score_color(score)
-    sc_hex = f"#{sc.red:02x}{sc.green:02x}{sc.blue:02x}"
+    sc_hex = _hex(sc)
 
     story.append(Paragraph(str(score), ParagraphStyle(
         "CoverScore", fontName="Helvetica-Bold",

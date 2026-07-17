@@ -110,6 +110,7 @@ async def analyze_file(body: AnalyzeRequest):
     file_hash = _hash_file(file_path)
     cached = _load_cached_analysis(file_hash)
     if cached:
+        _save_file_id_mapping(body.file_id, file_hash)
         return cached
 
     parsed = parse_document(file_path)
