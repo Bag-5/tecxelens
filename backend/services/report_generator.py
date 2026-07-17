@@ -329,8 +329,8 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
         sev = f.get("severity", "low")
         sev_color = SEVERITY_COLORS.get(sev, HexColor("#6b7280"))
         sev_bg = SEVERITY_BG.get(sev, HexColor("#f9fafb"))
-        sc_hex_sev = f"#{sev_color.red:02x}{sev_color.green:02x}{sev_color.blue:02x}"
-        bg_hex = f"#{sev_bg.red:02x}{sev_bg.green:02x}{sev_bg.blue:02x}"
+        sc_hex_sev = _hex(sev_color)
+        bg_hex = _hex(sev_bg)
 
         badge_cells = [
             [
