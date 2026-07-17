@@ -1,4 +1,4 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://selfless-nature-production-f4d3.up.railway.app";
 
 export interface UploadResult {
   file_id: string;
