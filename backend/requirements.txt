@@ -7,3 +7,4 @@ python-multipart
 python-pptx
 python-docx
 a2wsgi
+reportlab
