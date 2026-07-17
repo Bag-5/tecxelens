@@ -261,17 +261,14 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
     PAGE_W = A4[0] - 44 * mm  # usable width
 
     # ── COVER ──
-    story.append(Spacer(1, 95 * mm))
+    story.append(Spacer(1, 40 * mm))
     story.append(Paragraph("TECXE Lens", s["cover_brand"]))
     story.append(Paragraph("Compliance Assessment Report", s["cover_title"]))
-
-    clean_name = Path(filename).stem.replace("_", " ").replace("-", " ").title()
-    story.append(Paragraph(clean_name, s["file_label"]))
     story.append(Spacer(1, 3 * mm))
     story.append(
         Paragraph(datetime.now().strftime("%B %d, %Y"), s["file_label"])
     )
-    story.append(Spacer(1, 12 * mm))
+    story.append(Spacer(1, 16 * mm))
 
     score = data["overall_score"]
     risk = data["risk_level"]
@@ -301,19 +298,9 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
         spaceAfter=4 * mm,
     ))
     story.append(Paragraph(data.get("summary", ""), s["body"]))
-    story.append(Spacer(1, 4 * mm))
-
-    # Score bar
-    story.append(Paragraph(
-        f'Compliance Score: <b>{score}/100</b> — {risk}',
-        s["section_h2"],
-    ))
-    story.append(ScoreBar(score, PAGE_W, height=8))
     story.append(Spacer(1, 3 * mm))
     story.append(Paragraph(
-        f'<font color="{sc_hex}">■</font>  {risk}  '
-        f'<font color="{_hex(TEXT_SECONDARY)}">'
-        f'({"Excellent" if score >= 90 else "Good" if score >= 75 else "Medium" if score >= 50 else "Poor" if score >= 25 else "Critical"})</font>',
+        f'Overall Compliance Score: <b>{score}/100</b> ({risk})',
         s["body_small"],
     ))
     story.append(PageBreak())
@@ -381,40 +368,42 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
 
         rec = f.get("recommendation", "")
         if rec:
+            rec_label = Paragraph(
+                '<b>Recommendation:</b>',
+                ParagraphStyle("RecLabel", fontName="Helvetica-Bold",
+                               fontSize=9, leading=12, textColor=BRAND_INDIGO,
+                               spaceAfter=2),
+            )
+            rec_text = Paragraph(rec, ParagraphStyle(
+                "RecBody", fontName="Helvetica",
+                fontSize=10, leading=15, textColor=TEXT_PRIMARY,
+            ))
             rec_tbl = Table(
-                [[Paragraph(rec, s["callout"])]],
+                [[rec_label], [rec_text]],
                 colWidths=[PAGE_W - 8 * mm],
             )
             rec_tbl.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, -1), HexColor("#eef2ff")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-                ("BOX", (0, 0), (-1, -1), 0.5, BRAND_INDIGO),
                 ("LEFTPADDING", (0, 0), (-1, -1), 4 * mm),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4 * mm),
+                ("TOPPADDING", (0, 0), (0, 0), 6),
+                ("BOTTOMPADDING", (0, 0), (0, 0), 1),
+                ("TOPPADDING", (0, 1), (-1, 1), 1),
+                ("BOTTOMPADDING", (0, 1), (-1, 1), 6),
+                ("BOX", (0, 0), (-1, -1), 0.5, BRAND_INDIGO),
             ]))
             blocks.append(Spacer(1, 2 * mm))
             blocks.append(rec_tbl)
 
         refs = f.get("references", [])
         if refs:
-            ref_blocks = []
-            for ref in refs:
-                doc_name = Path(ref["document"]).stem.replace("_", " ").replace("-", " ").title()
-                section = ref.get("section", "")
-                ref_text = f"<b>{doc_name}</b>"
-                if section:
-                    ref_text += f" — {section}"
-                ref_blocks.append(Paragraph(ref_text, ParagraphStyle(
-                    "RefItem", fontName="Helvetica",
-                    fontSize=9, leading=13, textColor=BRAND_INDIGO,
-                    leftIndent=11,  # bullet indent
-                )))
+            def _ref_name(path: str) -> str:
+                name = Path(path).stem.replace("_", " ").strip()
+                return name
 
             ref_display = "<br/>".join(
                 f"●  {r}" for r in [
-                    f"<b>{Path(ref['document']).stem.replace('_', ' ').replace('-', ' ').title()}</b>"
+                    f"<b>{_ref_name(ref['document'])}</b>"
                     + (f" — {ref.get('section', '')}" if ref.get("section") else "")
                     for ref in refs
                 ]
@@ -501,7 +490,7 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
 
             cve_tbl = Table(
                 cve_rows,
-                colWidths=[30 * mm, PAGE_W - 30 * mm - 22 * mm, 14 * mm, 16 * mm],
+                colWidths=[28 * mm, PAGE_W - 28 * mm - 12 * mm - 14 * mm, 12 * mm, 14 * mm],
                 repeatRows=1,
             )
             cve_tbl.setStyle(TableStyle([
@@ -527,7 +516,7 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
             width="100%", thickness=0.5, color=BORDER_LIGHT,
             spaceBefore=3 * mm, spaceAfter=5 * mm,
         ))
-        story.append(KeepTogether(blocks))
+        story.extend(blocks)
 
     doc.build(
         story,
