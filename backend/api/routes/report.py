@@ -19,6 +19,7 @@ class ReportRequest(BaseModel):
 
 @router.post("/report")
 async def generate_pdf_report(body: ReportRequest):
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     mapping_path = CACHE_DIR / "_by_id" / f"{body.file_id}.json"
     if not mapping_path.exists():
         raise HTTPException(
