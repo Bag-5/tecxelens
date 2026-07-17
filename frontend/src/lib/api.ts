@@ -1,4 +1,5 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://selfless-nature-production-f4d3.up.railway.app";
+const _raw = process.env.NEXT_PUBLIC_API_URL || "https://selfless-nature-production-f4d3.up.railway.app";
+export const BASE_URL = _raw.replace(/\/+$/, "");
 
 export interface UploadResult {
   file_id: string;
