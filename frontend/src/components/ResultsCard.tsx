@@ -62,8 +62,8 @@ function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
   const spring = useSpring(count, { stiffness: 60, damping: 20 });
 
   useEffect(() => {
-    spring.set(score);
-  }, [score, spring]);
+    count.set(score);
+  }, [score, count]);
 
   const [displayScore, setDisplayScore] = useState(0);
   useEffect(() => {
