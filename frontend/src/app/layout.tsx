@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeProvider } from "@/lib/theme";
 import ThemeToggle from "@/components/ThemeToggle";
+import AnimatedPage from "@/components/AnimatedPage";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,7 +60,7 @@ export default function RootLayout({
               </nav>
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1"><AnimatedPage>{children}</AnimatedPage></main>
         </ThemeProvider>
       </body>
     </html>
