@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme } from "@/lib/theme";
 
 const icons: Record<string, React.ReactNode> = {
@@ -22,7 +23,9 @@ const icons: Record<string, React.ReactNode> = {
 
 export default function ThemeToggle() {
   const { resolved, theme, cycle } = useTheme();
-  const label = theme === "system" ? `Auto (${resolved})` : theme;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const label = !mounted ? "Auto" : theme === "system" ? `Auto (${resolved})` : theme;
 
   return (
     <button
