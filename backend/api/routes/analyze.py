@@ -109,13 +109,46 @@ async def analyze_file(body: AnalyzeRequest):
         )
 
     file_path = uploaded_files[0]
-    file_hash = _hash_file(file_path)
+    try:
+        file_hash = _hash_file(file_path)
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not read the uploaded file: {exc}",
+        )
     cached = _load_cached_analysis(file_hash)
     if cached:
         _save_file_id_mapping(body.file_id, file_hash)
         return cached
 
-    parsed = parse_document(file_path)
+    # A corrupt, encrypted, or image-only PDF makes pypdf raise. Left
+    # unhandled it escapes the app entirely: the 500 is generated outside the
+    # CORS middleware, so the browser reports "Failed to fetch" and the UI
+    # claims the backend is down instead of saying the file is unreadable.
+    # Raising HTTPException keeps it inside the middleware stack, which means
+    # the error reaches the client with proper CORS headers and a real message.
+    try:
+        parsed = parse_document(file_path)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Could not read this document. It may be corrupt, encrypted, "
+                "or a scanned image with no extractable text."
+            ),
+        ) from exc
+
+    if not (parsed.get("text") or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "No extractable text found. Scanned or image-only PDFs need OCR "
+                "before they can be analyzed."
+            ),
+        )
+
     raw_findings = evaluate(parsed["text"])
 
     scoring = compute_score(raw_findings)

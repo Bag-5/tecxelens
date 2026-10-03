@@ -13,7 +13,10 @@ response body to uWSGI.
 import asyncio
 import os
 import sys
+import traceback
+from datetime import datetime
 from http import HTTPStatus
+from pathlib import Path
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -109,6 +112,27 @@ class _ResponseCapture:
                 self.chunks.append(chunk)
 
 
+_ERROR_LOG = Path(BASE_DIR) / "storage" / "wsgi_errors.log"
+_ERROR_LOG_MAX_BYTES = 256 * 1024
+
+
+def _log_exception(environ) -> None:
+    """Append a traceback for an exception that escaped the ASGI app."""
+    try:
+        _ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
+        if _ERROR_LOG.exists() and _ERROR_LOG.stat().st_size > _ERROR_LOG_MAX_BYTES:
+            _ERROR_LOG.write_text("", encoding="utf-8")
+        with _ERROR_LOG.open("a", encoding="utf-8") as handle:
+            handle.write(
+                f"\n--- {environ.get('REQUEST_METHOD', '?')} "
+                f"{environ.get('PATH_INFO', '?')} "
+                f"{datetime.now().isoformat(timespec='seconds')} ---\n"
+            )
+            traceback.print_exc(file=handle)
+    except Exception:
+        pass
+
+
 class ASGIWSGIAdapter:
     """Expose an ASGI application as a WSGI callable."""
 
@@ -124,6 +148,11 @@ class ASGIWSGIAdapter:
         try:
             asyncio.run(run())
         except Exception:
+            # Shared hosts do not expose application logs over the API, so an
+            # escaped exception here is otherwise invisible: the client sees a
+            # bare 500 and the cause is lost. Persist it next to the app so it
+            # can be read back over the Files API.
+            _log_exception(environ)
             error = b'{"detail":"internal server error"}'
             start_response(
                 "500 Internal Server Error",
