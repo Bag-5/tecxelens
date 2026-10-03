@@ -8,3 +8,5 @@ frontend/.env
 frontend/.env.local
 backend/storage/uploads/
 backend/storage/analysis_cache/
+backend/knowledge_index.json
+backend/.venv/

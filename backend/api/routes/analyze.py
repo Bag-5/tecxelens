@@ -12,11 +12,10 @@ from services.rule_engine import evaluate
 from services.knowledge_service import search as knowledge_search
 from services.nvd_service import search_cves, extract_tech_keywords
 from services.scoring_engine import compute_score
+from services.storage_service import prune_all
+from core.config import CACHE_DIR, STORAGE_DIR
 
 router = APIRouter()
-
-STORAGE_DIR = Path("storage") / "uploads"
-CACHE_DIR = Path("storage") / "analysis_cache"
 
 
 class AnalyzeRequest(BaseModel):
@@ -82,10 +81,13 @@ async def _enrich_with_cves(finding: dict, doc_text: str) -> list[dict]:
     if not tech_kws:
         return []
 
+    per_keyword = await asyncio.gather(
+        *(search_cves(kw, top_k=5) for kw in tech_kws)
+    )
+
     seen: set[str] = set()
     all_cves: list[dict] = []
-    for kw in tech_kws:
-        results = await search_cves(kw, top_k=5)
+    for results in per_keyword:
         for cve in results:
             if cve["id"] not in seen:
                 seen.add(cve["id"])
@@ -157,4 +159,5 @@ async def analyze_file(body: AnalyzeRequest):
     }
     _save_cached_analysis(file_hash, response)
     _save_file_id_mapping(body.file_id, file_hash)
+    prune_all()
     return response

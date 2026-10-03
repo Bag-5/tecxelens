@@ -1,10 +1,16 @@
-fastapi
+fastapi>=0.110,<1.0
+starlette>=0.36,<0.42
 uvicorn
 python-dotenv
-pypdf
-httpx
+pypdf>=4.0
+httpx>=0.27
 python-multipart
 python-pptx
 python-docx
-a2wsgi
-reportlab
+a2wsgi>=1.10
+# reportlab 4.4.x ships a py3-none-any wheel, so it installs on hosts without
+# a compiler (PythonAnywhere). report_generator.py still uses the legacy
+# reportlab.lib.enums import path, which remains available (deprecated) in 4.x.
+# 3.6.x is deliberately avoided: it has no cp312 wheels and would require a
+# source build. Pinned below 5.0 until the enums shim is confirmed there.
+reportlab>=4.0,<5.0

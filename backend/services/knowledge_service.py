@@ -1,10 +1,11 @@
+import json
 import re
 from pathlib import Path
 from collections import Counter
 
 from pypdf import PdfReader
 
-from core.config import KNOWLEDGE_DIR
+from core.config import KNOWLEDGE_DIR, KNOWLEDGE_INDEX_PATH
 
 _cache: dict[str, dict] | None = None
 
@@ -38,9 +39,24 @@ def _split_sections(text: str) -> list[dict]:
     return sections
 
 
+def _load_from_index() -> dict[str, dict] | None:
+    if not KNOWLEDGE_INDEX_PATH.exists():
+        return None
+    try:
+        data = json.loads(KNOWLEDGE_INDEX_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return data if isinstance(data, dict) and data else None
+
+
 def _load_all() -> dict[str, dict]:
     global _cache
     if _cache is not None:
+        return _cache
+
+    indexed = _load_from_index()
+    if indexed is not None:
+        _cache = indexed
         return _cache
 
     _cache = {}

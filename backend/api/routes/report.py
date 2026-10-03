@@ -7,10 +7,9 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from services.report_generator import generate_report
+from core.config import CACHE_DIR
 
 router = APIRouter()
-
-CACHE_DIR = Path("storage") / "analysis_cache"
 
 
 class ReportRequest(BaseModel):

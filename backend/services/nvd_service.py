@@ -3,7 +3,7 @@ from datetime import datetime
 
 import httpx
 
-from core.config import NVD_API_KEY
+from core.config import NVD_API_KEY, NVD_MAX_KEYWORDS, NVD_TIMEOUT
 
 TECH_KEYWORDS = [
     "openssl", "tls", "apache", "windows", "smb", "ssh", "ssl",
@@ -12,8 +12,8 @@ TECH_KEYWORDS = [
     "active directory", "ldap", "kerberos", "oauth", "saml",
     "vpn", "openvpn", "ipsec", "wpa", "wep", "bluetooth", "usb",
     "bios", "uefi", "tpm", "hsm", "pki", "x.509", "openssh",
-    "tomcat", "nginx", "redis", "elasticsearch", "rabbitmq",
-    "nginx", "haproxy", "curl", "wget", "bash", "powershell",
+    "tomcat", "redis", "elasticsearch", "rabbitmq",
+    "haproxy", "curl", "wget", "bash", "powershell",
     "macos", "android", "ios", "chrome", "firefox", "edge",
     "safari", "exchange", "sharepoint", "sql server", "oracle",
 ]
@@ -93,7 +93,7 @@ async def search_cves(keyword: str, top_k: int = 3) -> list[dict]:
             if api_key:
                 headers["apiKey"] = api_key
 
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=NVD_TIMEOUT) as client:
                 resp = await client.get(
                     "https://services.nvd.nist.gov/rest/json/cves/2.0",
                     params=params,
@@ -124,10 +124,17 @@ async def search_cves(keyword: str, top_k: int = 3) -> list[dict]:
     return []
 
 
-def extract_tech_keywords(text: str) -> list[str]:
+def extract_tech_keywords(text: str, limit: int | None = None) -> list[str]:
+    """Return matching tech keywords, capped at NVD_MAX_KEYWORDS by default.
+
+    Each keyword triggers a live NVD request, so an uncapped list (a dense
+    policy document can match 20+) turns enrichment into minutes of latency.
+    Longest keywords are preferred since they are the most specific match.
+    """
+    if limit is None:
+        limit = NVD_MAX_KEYWORDS
+
     lower = text.lower()
-    found: set[str] = set()
-    for kw in TECH_KEYWORDS:
-        if kw in lower:
-            found.add(kw)
-    return sorted(found)
+    found = {kw for kw in TECH_KEYWORDS if kw in lower}
+    ranked = sorted(found, key=lambda k: (-len(k), k))
+    return ranked[:limit]
