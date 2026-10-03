@@ -162,7 +162,21 @@ async function request<T>(
       };
     }
     if (err instanceof TypeError && err.message === "Failed to fetch") {
-      return { success: false, error: "Network error — is the backend running?" };
+      // Deliberately not "is the backend running?". A browser reports an
+      // identical TypeError when it silently blocks a response over CORS, and
+      // that is by far the more common cause: the backend is up and returning
+      // 200s, it just will not hand the body to a page whose origin it does not
+      // allow. Naming only the wrong cause sends people to restart a healthy
+      // service.
+      return {
+        success: false,
+        error:
+          "Could not reach the API. Either it is not running, or it rejected " +
+          "this page's origin via CORS — check the backend's FRONTEND_ORIGIN " +
+          "includes " +
+          (typeof window !== "undefined" ? window.location.origin : "this origin") +
+          ".",
+      };
     }
     const msg = err instanceof Error ? err.message : "Unknown error";
     return { success: false, error: msg };

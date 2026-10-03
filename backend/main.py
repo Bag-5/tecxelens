@@ -7,17 +7,23 @@ from api.routes.analyze import router as analyze_router
 from api.routes.knowledge import router as knowledge_router
 from api.routes.links import router as links_router
 from api.routes.report import router as report_router
-from core.config import API_VERSION, FRONTEND_ORIGINS
+from core.config import API_VERSION, FRONTEND_ORIGINS, origin_regex
 
 app = FastAPI(title="TECXE Lens", version=API_VERSION)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=FRONTEND_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Exact origins plus a regex for any wildcard entries, so preview deployments
+# and local dev are not silently blocked. Starlette checks both.
+_cors_kwargs = {
+    "allow_origins": FRONTEND_ORIGINS,
+    "allow_credentials": True,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+_pattern = origin_regex(FRONTEND_ORIGINS)
+if _pattern:
+    _cors_kwargs["allow_origin_regex"] = _pattern
+
+app.add_middleware(CORSMiddleware, **_cors_kwargs)
 
 app.include_router(health_router, tags=["health"])
 app.include_router(upload_router, tags=["upload"])

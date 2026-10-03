@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -104,3 +105,54 @@ _frontend_origin = os.getenv("FRONTEND_ORIGIN", "*").strip()
 FRONTEND_ORIGINS = [origin.strip() for origin in _frontend_origin.split(",") if origin.strip()]
 if not FRONTEND_ORIGINS:
     FRONTEND_ORIGINS = ["*"]
+
+
+def origin_regex(patterns: list[str]) -> str | None:
+    """Compile configured origins into a regex, supporting a ``*`` subdomain wildcard.
+
+    Starlette's CORSMiddleware only does exact string matching, so a plain
+    allowlist silently breaks every Vercel preview deployment (each gets a unique
+    random subdomain) and local development. A browser blocked by CORS reports a
+    generic network failure, which makes the cause very hard to spot.
+
+    Supported forms per entry:
+
+    * ``*`` alone means allow everything, handled by the caller.
+    * ``https://*.vercel.app`` matches any subdomain depth of vercel.app.
+    * anything else is escaped and matched literally.
+
+    A ``*`` expands only to whole DNS labels ("one or more label."), never to
+    arbitrary characters. That keeps ``https://evil.com/?x=.vercel.app`` from
+    matching, which a naive ``.*`` would happily allow. A bare ``https://vercel.app``
+    also does not match, since the wildcard requires at least the dot.
+
+    Returns ``None`` when there is nothing extra to match, i.e. when the caller
+    should rely on the plain allowlist alone.
+    """
+    if not any("*" in pattern for pattern in patterns):
+        return None
+    if patterns == ["*"]:
+        # Allow-all is handled by allow_origins=["*"]; a regex is redundant.
+        return None
+
+    compiled: list[str] = []
+    for pattern in patterns:
+        if "*" not in pattern:
+            compiled.append(re.escape(pattern))
+            continue
+        pieces = pattern.split("*")
+        regex = ""
+        for index, piece in enumerate(pieces):
+            if index > 0:
+                # A "*" stands in for one or more whole DNS labels, each ending
+                # in a dot, so the "." that follows it in "https://*.vercel.app"
+                # is already accounted for and must not be required twice.
+                # Requiring at least one label is also what stops a bare
+                # "https://vercel.app" from matching.
+                regex += r"[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\."
+                if piece.startswith("."):
+                    piece = piece[1:]
+            regex += re.escape(piece)
+        compiled.append(regex)
+
+    return "|".join(f"(?:{alt})" for alt in compiled)
