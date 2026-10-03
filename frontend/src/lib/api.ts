@@ -1,8 +1,20 @@
-// NEXT_PUBLIC_* is inlined at build time, so this must be set as a project env
-// var to take effect. The fallback below is what ships if it is not set.
-// Default points at the self-hosted PythonAnywhere backend; override with
-// NEXT_PUBLIC_API_URL to target a different deployment.
-const _raw = process.env.NEXT_PUBLIC_API_URL || "https://bag5.pythonanywhere.com";
+// Backend location comes only from NEXT_PUBLIC_API_URL; nothing is hardcoded
+// here. Next.js inlines NEXT_PUBLIC_* at build time, so this must be defined as
+// a project environment variable before building or deploying, and changing it
+// requires a rebuild rather than just a restart.
+//
+// Failing loudly beats silently defaulting to some host: a baked-in fallback
+// either points at a decommissioned backend or quietly sends document contents
+// somewhere unintended, and both failures look like "the app is just broken".
+const _raw = process.env.NEXT_PUBLIC_API_URL;
+
+if (!_raw) {
+  throw new Error(
+    "NEXT_PUBLIC_API_URL is not set. Add it to the deployment environment " +
+      "(it is inlined at build time, so rebuild after changing it)."
+  );
+}
+
 export const BASE_URL = _raw.replace(/\/+$/, "");
 
 export interface UploadResult {
