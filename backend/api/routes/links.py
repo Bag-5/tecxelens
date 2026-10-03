@@ -113,11 +113,22 @@ def _fallback_summary(links: list[dict], score: int, level: str) -> str:
         return detail + " Nothing here has been verified either way."
 
     if not actionable:
-        return (
-            f"No suspicious links were found. The link risk score is {score} "
-            f"({level}). Links that could not be checked are reported as "
-            f"unknown and have not been verified either way."
+        # Only mention unchecked links when there actually are some. Saying
+        # "links that could not be checked are reported as unknown" on a scan
+        # where every link was accounted for is just noise, and it trains the
+        # reader to skim past a caveat that sometimes matters.
+        text = (
+            f"No suspicious links were found among the {len(checked)} link"
+            f"{'s' if len(checked) != 1 else ''} checked. The link risk score is "
+            f"{score} ({level})."
         )
+        if queued:
+            text += (
+                f" {len(queued)} link{'s' if len(queued) != 1 else ''} could not be "
+                f"checked and {'have' if len(queued) != 1 else 'has'} not been "
+                f"verified either way."
+            )
+        return text
     hosts = sorted({_host(link["url"]) for link in actionable})
     return (
         f"{len(actionable)} of {len(checked)} checked links carry a security flag, "

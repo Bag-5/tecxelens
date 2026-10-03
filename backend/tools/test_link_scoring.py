@@ -62,6 +62,21 @@ def main() -> int:
     if "No suspicious links were found" not in summary:
         failures.append("clean scan should still say so")
         print("  FAIL clean scan no longer reports its result")
+    if "could not be checked" not in summary:
+        failures.append("clean scan with an unchecked link should say so")
+        print("  FAIL missing the unchecked-link caveat when one exists")
+
+    print("\n=== clean scan with nothing unchecked: no bogus caveat ===")
+    links = [L("lookup"), L("filtered")]
+    got = compute_link_risk(links)
+    summary = _fallback_summary(links, got["overall_score"], got["risk_level"])
+    print(f"  {summary}")
+    if "could not be checked" in summary:
+        failures.append("claims unchecked links when every link was accounted for")
+        print("  FAIL mentions unchecked links when there are none")
+    if "among the 1 link checked" not in summary:
+        failures.append("clean summary should say how many were checked")
+        print("  FAIL expected 'among the 1 link checked'")
 
     print("\n=== summary when something is flagged ===")
     links = [L("lookup", "critical", "https://bad.example.org/a"),
