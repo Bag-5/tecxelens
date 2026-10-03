@@ -89,6 +89,29 @@ def _link_to_finding(link: dict) -> dict:
 
 def _fallback_summary(links: list[dict], score: int, level: str) -> str:
     actionable = [link for link in links if link["severity"] in _ACTIONABLE]
+    checked = [link for link in links if link.get("source") == "lookup"]
+    queued = [link for link in links if link["source"] == "queued"]
+
+    if not checked:
+        # Never say "no suspicious links were found" when nothing was checked.
+        # That sentence is the one a reader is most likely to act on.
+        withheld = len([link for link in links if link["source"] == "filtered"])
+        detail = (
+            f"No links could be checked against VirusTotal, so this scan carries "
+            f"no risk score ({level})."
+        )
+        if withheld:
+            detail += (
+                f" {withheld} link{'s were' if withheld != 1 else ' was'} "
+                f"withheld as private or internal addresses."
+            )
+        if queued:
+            detail += (
+                f" {len(queued)} link{'s have' if len(queued) != 1 else ' has'} no "
+                f"existing VirusTotal record."
+            )
+        return detail + " Nothing here has been verified either way."
+
     if not actionable:
         return (
             f"No suspicious links were found. The link risk score is {score} "
@@ -97,8 +120,8 @@ def _fallback_summary(links: list[dict], score: int, level: str) -> str:
         )
     hosts = sorted({_host(link["url"]) for link in actionable})
     return (
-        f"{len(actionable)} of {len(links)} links carry a security flag, giving "
-        f"a link risk score of {score} ({level}). Affected hosts: "
+        f"{len(actionable)} of {len(checked)} checked links carry a security flag, "
+        f"giving a link risk score of {score} ({level}). Affected hosts: "
         f"{', '.join(hosts[:10])}. These links should be treated as unsafe "
         f"until verified by other means."
     )

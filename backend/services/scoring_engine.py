@@ -49,9 +49,22 @@ def compute_link_risk(links: list[dict]) -> dict:
 
     Uses the same RISK_LEVELS bands and the same "higher is safer" direction so
     the existing score ring and report cover render correctly without changes.
-    Only links with a real severity are counted; clean and unchecked links do
-    not dilute the result.
+    Only links with a real severity contribute a penalty; clean and unchecked
+    links do not dilute the result.
+
+    Absence of evidence is not evidence of safety. When no link was actually
+    looked up -- every URL filtered as internal, or queued with no record --
+    there is nothing to score, and returning 100/"Excellent" would assert the
+    precise opposite of what is known. That case is reported as "Not Assessed"
+    at 0 instead, which cannot be mistaken for a clean bill of health.
+
+    Note the distinction from "checked and clean": if links were looked up and
+    none carries a severity, that genuinely is 100.
     """
+    assessed = [link for link in links if link.get("source") == "lookup"]
+    if not assessed:
+        return {"overall_score": 0, "risk_level": "Not Assessed"}
+
     penalty = sum(LINK_WEIGHT_MAP.get(link.get("severity", ""), 0) for link in links)
     score = max(0, min(100, 100 - penalty))
 
