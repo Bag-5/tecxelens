@@ -70,6 +70,36 @@ NVD_API_KEY = os.getenv("NVD_API_KEY", "")
 NVD_TIMEOUT = float(os.getenv("NVD_TIMEOUT", "8"))
 NVD_MAX_KEYWORDS = int(os.getenv("NVD_MAX_KEYWORDS", "3"))
 
+# Link reputation. The provider is pluggable: services/link_providers resolves
+# LINK_PROVIDER to an implementation, so adding a second reputation source is a
+# new module rather than a rewrite of the callers.
+LINK_PROVIDER = os.getenv("LINK_PROVIDER", "virustotal").strip().lower()
+
+VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
+VIRUSTOTAL_TIMEOUT = float(os.getenv("VIRUSTOTAL_TIMEOUT", "10"))
+
+# The Public (free) VirusTotal API allows 4 requests/minute and 500/day, and a
+# single scan costs one request per URL. Capping before any network call keeps
+# a large paste from silently exhausting the minute budget and returning a wall
+# of unexplained failures.
+VIRUSTOTAL_MAX_URLS = int(os.getenv("VIRUSTOTAL_MAX_URLS", "25"))
+
+# Submitting an unknown URL asks VirusTotal to analyse it, which takes minutes
+# and burns quota. Lookups are free of that cost, so this stays opt-in.
+VIRUSTOTAL_SUBMIT = os.getenv("VIRUSTOTAL_SUBMIT", "true").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+}
+
+# Anything matching these domains is never sent to a third party, even when a
+# user pastes it explicitly.
+INTERNAL_DOMAINS = [
+    d.strip().lower().lstrip(".")
+    for d in os.getenv("INTERNAL_DOMAINS", "").split(",")
+    if d.strip()
+]
+
 _frontend_origin = os.getenv("FRONTEND_ORIGIN", "*").strip()
 FRONTEND_ORIGINS = [origin.strip() for origin in _frontend_origin.split(",") if origin.strip()]
 if not FRONTEND_ORIGINS:

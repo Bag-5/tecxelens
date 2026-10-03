@@ -54,7 +54,7 @@ async def generate_pdf_report(body: ReportRequest):
         tmp_path = Path(tmp.name)
 
     try:
-        generate_report(data, "analysis", tmp_path)
+        generate_report(data, data.get("report_type", "analysis"), tmp_path)
         pdf_bytes = tmp_path.read_bytes()
     finally:
         tmp_path.unlink(missing_ok=True)

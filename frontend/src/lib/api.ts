@@ -53,6 +53,85 @@ export interface AnalyzeResult {
   findings: Finding[];
 }
 
+/**
+ * Where a verdict came from. `filtered` means the privacy filter withheld the
+ * URL from VirusTotal entirely, so "clean" and "never sent" stay distinguishable
+ * on the surface.
+ */
+export type LinkSource = "lookup" | "queued" | "filtered";
+
+export type LinkVerdict =
+  | "malicious"
+  | "suspicious"
+  | "harmless"
+  | "unknown"
+  | "not_scanned";
+
+export interface LinkVerdictEntry {
+  url: string;
+  verdict: LinkVerdict;
+  /** critical | high | medium | low | none */
+  severity: string;
+  malicious: number;
+  suspicious: number;
+  harmless: number;
+  undetected: number;
+  timeout: number;
+  categories: Record<string, string>;
+  reputation: number;
+  /** Unix seconds; 0 when VirusTotal has never analysed the URL. */
+  last_analysis_date: number;
+  permalink: string;
+  source: LinkSource;
+}
+
+/**
+ * Reuses the document result shape so the existing results page, findings list
+ * and PDF download button work unchanged. `overall_score` is a *link* risk
+ * score here, which is why `report_type` is carried alongside it.
+ */
+export interface LinkScanResult extends AnalyzeResult {
+  report_type: "links";
+  links: LinkVerdictEntry[];
+  filtered_count: number;
+  truncated_count: number;
+  quota_exhausted: boolean;
+  file_id: string;
+}
+
+/** Polling response: verdicts only, no AI prose and no report rewrite. */
+export interface LinkStatusResult {
+  links: LinkVerdictEntry[];
+  link_risk_score: number;
+  link_risk_level: string;
+  checked_count: number;
+  filtered_count: number;
+  truncated_count: number;
+  quota_exhausted: boolean;
+  max_urls: number;
+}
+
+export interface LinkSubmitResult {
+  /** Keyed by URL, each value the provider's job id. */
+  submitted: Record<string, { url: string; job_id: string }>;
+  granted: number;
+  deferred: number;
+  reason: string | null;
+}
+
+/**
+ * Whether this deployment can actually perform link lookups. Checked on load so
+ * an unconfigured provider is explained up front instead of returning a wall of
+ * "unknown" verdicts that would look like a clean scan.
+ */
+export interface LinkCapabilities {
+  enabled: boolean;
+  provider: string;
+  max_urls: number;
+  submission_enabled: boolean;
+  reason: string | null;
+}
+
 export type ApiResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
@@ -102,4 +181,39 @@ export async function analyzeFile(fileId: string): Promise<ApiResult<AnalyzeResu
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ file_id: fileId }),
   });
+}
+
+/** One POST helper for all three link endpoints: they share a request body. */
+function postLinks<T>(url: string, urls: string[], enrich = false): Promise<ApiResult<T>> {
+  return request<T>(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ urls, enrich }),
+  });
+}
+
+/**
+ * Read once per page load. Deliberately tolerant: a failure here must not break
+ * the document flow, so the caller treats an error as "unknown" and leaves the
+ * Links tab enabled rather than hiding a feature that might be fine.
+ */
+export async function fetchLinkCapabilities(): Promise<ApiResult<LinkCapabilities>> {
+  return request<LinkCapabilities>("/capabilities");
+}
+
+export async function scanLinks(urls: string[]): Promise<ApiResult<LinkScanResult>> {
+  return postLinks<LinkScanResult>("/scan-links", urls, true);
+}
+
+/** Poll for verdicts on URLs that were previously unknown or submitted. */
+export async function pollLinkStatus(urls: string[]): Promise<ApiResult<LinkStatusResult>> {
+  return postLinks<LinkStatusResult>("/scan-links/status", urls, false);
+}
+
+/**
+ * Ask VirusTotal to analyse unknown URLs. Returns immediately with job ids;
+ * poll `pollLinkStatus` after a delay to collect the verdicts.
+ */
+export async function submitLinks(urls: string[]): Promise<ApiResult<LinkSubmitResult>> {
+  return postLinks<LinkSubmitResult>("/scan-links/submit", urls, false);
 }

@@ -11,8 +11,19 @@ interface Dot {
   size: number;
 }
 
-export default function AnalyzingAnimation({ phase }: { phase: "uploading" | "analyzing" }) {
-  const label = phase === "uploading" ? "Uploading" : "Scanning";
+export default function AnalyzingAnimation({
+  phase,
+}: {
+  phase: "uploading" | "analyzing" | "scanning";
+}) {
+  // "analyzing" keeps its original "Scanning" wording so the document flow's
+  // copy is unchanged; only the link mode gets its own label.
+  const label =
+    phase === "uploading"
+      ? "Uploading"
+      : phase === "scanning"
+        ? "Checking Links"
+        : "Scanning";
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

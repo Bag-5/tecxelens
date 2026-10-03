@@ -5,9 +5,14 @@ import { BASE_URL } from "@/lib/api";
 
 interface Props {
   fileId: string;
+  /** Lets the link scanner name its output honestly instead of "compliance". */
+  filename?: string;
 }
 
-export default function DownloadReportButton({ fileId }: Props) {
+export default function DownloadReportButton({
+  fileId,
+  filename = "compliance_report.pdf",
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +37,7 @@ export default function DownloadReportButton({ fileId }: Props) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "compliance_report.pdf";
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();

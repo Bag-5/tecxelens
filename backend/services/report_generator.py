@@ -245,7 +245,128 @@ def _draw_footer(canvas, doc):
     canvas.restoreState()
 
 
-def generate_report(data: dict, filename: str, output_path: Path) -> Path:
+def _link_verdict_table(links: list[dict], s: dict, page_w) -> list:
+    """Render one row per scanned link with its VirusTotal verdict.
+
+    Every field is HTML-escaped before being handed to Paragraph: a URL with a
+    query string contains &, which ReportLab would otherwise read as a markup
+    entity and either drop or blow up on.
+    """
+    from xml.sax.saxutils import escape
+
+    verdict_colors = {
+        "malicious": "#dc2626",
+        "suspicious": "#d97706",
+        "harmless": "#16a34a",
+        "unknown": "#6b7280",
+        "not_scanned": "#6b7280",
+    }
+
+    header_style = ParagraphStyle(
+        "LinkHeader", fontName="Helvetica-Bold", fontSize=8.5,
+        textColor=colors.white,
+    )
+    cell_style = ParagraphStyle(
+        "LinkCell", fontName="Helvetica", fontSize=8, leading=10,
+    )
+    url_style = ParagraphStyle(
+        "LinkUrl", fontName="Courier", fontSize=7.5, leading=9.5,
+    )
+
+    rows = [[
+        Paragraph("URL", header_style),
+        Paragraph("Verdict", header_style),
+        Paragraph("Engines (mal / susp / harmless)", header_style),
+        Paragraph("Categories", header_style),
+    ]]
+
+    for link in links:
+        url = link.get("url", "")
+        verdict = link.get("verdict", "unknown")
+        colour = verdict_colors.get(verdict, "#6b7280")
+        engines = (
+            f'<font color="#dc2626">{link.get("malicious", 0)}</font> / '
+            f'<font color="#d97706">{link.get("suspicious", 0)}</font> / '
+            f'<font color="#16a34a">{link.get("harmless", 0)}</font>'
+        )
+        categories = ", ".join(
+            sorted(set(link.get("categories", {}).values()))
+        ) or "—"
+
+        rows.append([
+            Paragraph(escape(url[:120]), url_style),
+            Paragraph(
+                f'<font color="{colour}"><b>'
+                f'{escape(verdict.replace("_", " ").title())}</b></font>',
+                cell_style,
+            ),
+            Paragraph(engines, cell_style),
+            Paragraph(escape(categories[:60]), cell_style),
+        ])
+
+    table = Table(rows, colWidths=[page_w * 0.42, page_w * 0.14, page_w * 0.24, page_w * 0.20])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), BRAND_INDIGO),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.3, BORDER_LIGHT),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    for i in range(2, len(rows), 2):
+        table.setStyle(TableStyle([("BACKGROUND", (0, i), (-1, i), HexColor("#f9fafb"))]))
+
+    flowables = [Paragraph("Scanned Links", s["section_h1"]), table]
+
+    checked = sum(1 for link in links if link.get("source") == "lookup")
+    filtered = sum(1 for link in links if link.get("source") == "filtered")
+    queued = sum(1 for link in links if link.get("verdict") == "unknown")
+
+    def _plural(n: int, singular: str, plural: str) -> str:
+        return f"{n} {singular}" if n == 1 else f"{n} {plural}"
+
+    note = (
+        f"{_plural(checked, 'link was', 'links were')} checked against VirusTotal."
+    )
+    if filtered:
+        note += (
+            f" {_plural(filtered, 'link was', 'links were')} withheld as internal"
+            f" or private addresses and not sent to any third party."
+        )
+    if queued:
+        note += (
+            f" {_plural(queued, 'link had', 'links had')} no existing VirusTotal"
+            f" record and {'is' if queued == 1 else 'are'} reported as unchecked,"
+            f" which is not the same as safe."
+        )
+    flowables.append(Spacer(1, 2 * mm))
+    flowables.append(Paragraph(escape(note), s["body_small"]))
+
+    return flowables
+
+
+def generate_report(data: dict, report_type: str, output_path: Path) -> Path:
+    """Render a PDF report.
+
+    ``report_type`` selects the cover title and score wording: "analysis" for
+    document compliance, "links" for link reputation. It was previously named
+    ``filename`` and never referenced, which is why callers could pass
+    "analysis" unconditionally without it affecting anything.
+
+    The parameter order is unchanged, so the existing positional call
+    ``generate_report(data, "analysis", tmp_path)`` still works.
+    """
+    is_link_report = report_type == "links"
+    cover_title = (
+        "Link Risk Assessment Report" if is_link_report else "Compliance Assessment Report"
+    )
+    score_label = "Link Risk Score" if is_link_report else "Overall Compliance Score"
+    findings_heading = (
+        "Flagged Links" if is_link_report else "Findings & Recommendations"
+    )
+
     doc = SimpleDocTemplate(
         str(output_path),
         pagesize=A4,
@@ -263,7 +384,7 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
     # ── COVER ──
     story.append(Spacer(1, 40 * mm))
     story.append(Paragraph("TECXE Lens", s["cover_brand"]))
-    story.append(Paragraph("Compliance Assessment Report", s["cover_title"]))
+    story.append(Paragraph(cover_title, s["cover_title"]))
     story.append(Spacer(1, 3 * mm))
     story.append(
         Paragraph(datetime.now().strftime("%B %d, %Y"), s["file_label"])
@@ -300,13 +421,13 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
     story.append(Paragraph(data.get("summary", ""), s["body"]))
     story.append(Spacer(1, 3 * mm))
     story.append(Paragraph(
-        f'Overall Compliance Score: <b>{score}/100</b> ({risk})',
+        f'{score_label}: <b>{score}/100</b> ({risk})',
         s["body_small"],
     ))
     story.append(PageBreak())
 
     # ── FINDINGS ──
-    story.append(Paragraph("Findings & Recommendations", s["section_h1"]))
+    story.append(Paragraph(findings_heading, s["section_h1"]))
     story.append(HRFlowable(
         width="100%", thickness=1.5, color=BRAND_INDIGO,
         spaceAfter=4 * mm,
@@ -517,6 +638,12 @@ def generate_report(data: dict, filename: str, output_path: Path) -> Path:
             spaceBefore=3 * mm, spaceAfter=5 * mm,
         ))
         story.extend(blocks)
+
+    # Link reports carry the full per-URL table; document reports have no
+    # links array and skip this entirely.
+    if is_link_report and data.get("links"):
+        story.append(PageBreak())
+        story.extend(_link_verdict_table(data["links"], s, PAGE_W))
 
     doc.build(
         story,

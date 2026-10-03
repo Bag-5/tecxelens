@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import ResultsCard from "@/components/ResultsCard";
+import LinkResultsCard from "@/components/LinkResultsCard";
 import DownloadReportButton from "@/components/DownloadReportButton";
-import type { AnalyzeResult, Finding } from "@/lib/api";
+import type { AnalyzeResult, LinkScanResult } from "@/lib/api";
 
 function Skeleton() {
   return (
@@ -50,7 +51,7 @@ function ResultsContent() {
     );
   }
 
-  let data: AnalyzeResult;
+  let data: AnalyzeResult | LinkScanResult;
   try {
     data = JSON.parse(fromUrl ? decodeURIComponent(rawData) : rawData);
   } catch {
@@ -64,16 +65,39 @@ function ResultsContent() {
     );
   }
 
+  // A link scan and a document scan share the summary/score/findings shape but
+  // differ in score meaning and in the per-URL table, so they get different
+  // cards. Keying off report_type keeps the stored payload self-describing.
+  const isLinkReport =
+    (data as LinkScanResult).report_type === "links" &&
+    Array.isArray((data as LinkScanResult).links);
+
   return (
     <div className="max-w-4xl mx-auto mt-8 sm:mt-12 px-4 sm:px-6 pb-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">Analysis Results</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
+          {isLinkReport ? "Link Risk Report" : "Analysis Results"}
+        </h1>
         <div className="flex items-center gap-3">
-          {fileId && <DownloadReportButton fileId={fileId} />}
-          <Link href="/upload" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">Analyze another</Link>
+          {/* LinkResultsCard renders its own download button, since the PDF it
+              serves is a link report rather than a compliance report. */}
+          {fileId && !isLinkReport && <DownloadReportButton fileId={fileId} />}
+          <Link href="/upload" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-medium">
+            {isLinkReport ? "Scan more links" : "Analyze another"}
+          </Link>
         </div>
       </div>
-      <ResultsCard overallScore={data.overall_score} riskLevel={data.risk_level} findings={data.findings} summary={data.summary} />
+
+      {isLinkReport ? (
+        <LinkResultsCard result={data as LinkScanResult} />
+      ) : (
+        <ResultsCard
+          overallScore={data.overall_score}
+          riskLevel={data.risk_level}
+          findings={data.findings}
+          summary={data.summary}
+        />
+      )}
     </div>
   );
 }

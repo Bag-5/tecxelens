@@ -1,6 +1,5 @@
 import asyncio
 import hashlib
-import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -12,8 +11,8 @@ from services.rule_engine import evaluate
 from services.knowledge_service import search as knowledge_search
 from services.nvd_service import search_cves, extract_tech_keywords
 from services.scoring_engine import compute_score
-from services.storage_service import prune_all
-from core.config import CACHE_DIR, STORAGE_DIR
+from services import storage_service as storage
+from core.config import STORAGE_DIR
 
 router = APIRouter()
 
@@ -44,35 +43,8 @@ def _hash_file(path: Path) -> str:
     return hasher.hexdigest()
 
 
-def _cache_path(file_hash: str) -> Path:
-    return CACHE_DIR / f"{file_hash}.json"
-
-
-def _load_cached_analysis(file_hash: str) -> dict | None:
-    path = _cache_path(file_hash)
-    if not path.exists():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return None
-
-
-def _save_cached_analysis(file_hash: str, payload: dict) -> None:
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    _cache_path(file_hash).write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def _save_file_id_mapping(file_id: str, file_hash: str) -> None:
-    mapping_dir = CACHE_DIR / "_by_id"
-    mapping_dir.mkdir(parents=True, exist_ok=True)
-    (mapping_dir / f"{file_id}.json").write_text(
-        json.dumps({"file_hash": file_hash}, ensure_ascii=False),
-        encoding="utf-8",
-    )
+def cache_path(file_hash: str) -> Path:
+    return storage.cache_payload_path(file_hash)
 
 
 async def _enrich_with_cves(finding: dict, doc_text: str) -> list[dict]:
@@ -116,9 +88,9 @@ async def analyze_file(body: AnalyzeRequest):
             status_code=500,
             detail=f"Could not read the uploaded file: {exc}",
         )
-    cached = _load_cached_analysis(file_hash)
+    cached = storage.load_cached_analysis(file_hash)
     if cached:
-        _save_file_id_mapping(body.file_id, file_hash)
+        storage.save_file_id_mapping(body.file_id, file_hash)
         return cached
 
     # A corrupt, encrypted, or image-only PDF makes pypdf raise. Left
@@ -190,7 +162,7 @@ async def analyze_file(body: AnalyzeRequest):
         "risk_level": risk_level,
         "findings": findings_out,
     }
-    _save_cached_analysis(file_hash, response)
-    _save_file_id_mapping(body.file_id, file_hash)
-    prune_all()
+    storage.save_cached_analysis(file_hash, response)
+    storage.save_file_id_mapping(body.file_id, file_hash)
+    storage.prune_all()
     return response

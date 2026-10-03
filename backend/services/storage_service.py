@@ -14,6 +14,7 @@ Pruning runs after uploads and after analyses. It is a cheap scandir on a
 directory holding tens of files, so there is no need to throttle it.
 """
 
+import json
 import time
 from pathlib import Path
 
@@ -87,6 +88,53 @@ def _prune_dir(
 
 def prune_uploads() -> int:
     return _prune_dir(STORAGE_DIR, UPLOAD_KEEP_BYTES, UPLOAD_KEEP_FILES)
+
+
+# --- analysis cache payloads -------------------------------------------------
+# These live here rather than in the route because /report resolves a file_id
+# through them and both /analyze and /scan-links write them. Keeping the layout
+# in one module means a change to the on-disk shape cannot drift between the
+# route that writes and the route that reads.
+
+
+def cache_payload_path(file_hash: str) -> Path:
+    return CACHE_DIR / f"{file_hash}.json"
+
+
+def file_id_mapping_path(file_id: str) -> Path:
+    return CACHE_DIR / "_by_id" / f"{file_id}.json"
+
+
+def load_cached_analysis(file_hash: str) -> dict | None:
+    path = cache_payload_path(file_hash)
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def save_cached_analysis(file_hash: str, payload: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_payload_path(file_hash).write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def save_file_id_mapping(file_id: str, file_hash: str) -> None:
+    """Point an opaque file_id at a cached payload.
+
+    /report resolves reports exclusively through this mapping, so any scan that
+    should yield a downloadable PDF must write one.
+    """
+    path = file_id_mapping_path(file_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"file_hash": file_hash}, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def prune_cache() -> int:
