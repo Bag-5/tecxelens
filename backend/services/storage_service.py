@@ -72,7 +72,7 @@ def _prune_dir(
     # A single file larger than the whole budget can never be satisfied by
     # pruning alone; drop the oldest entries regardless once we exceed it.
     if total > keep_bytes and entries:
-        for path in reversed(entries):
+        for path in entries:
             if total <= keep_bytes:
                 break
             try:
@@ -90,19 +90,20 @@ def prune_uploads() -> int:
 
 
 def prune_cache() -> int:
-    cache_root = CACHE_DIR / "_by_id"
-    removed = _prune_dir(cache_root, CACHE_KEEP_BYTES, CACHE_KEEP_FILES * 4)
+    """Evict cached analyses oldest-first against the cache budget.
 
-    # Cache payloads live directly in CACHE_DIR alongside the _by_id folder.
-    for path in sorted(CACHE_DIR.glob("*.json")):
-        try:
-            if time.time() - path.stat().st_mtime < 60.0:
-                continue
-            path.unlink()
-            removed += 1
-        except OSError:
-            pass
-
+    Both the payload files and the file_id mappings are budgeted rather than
+    aged out. Ageing payloads out on a timer looks tidy but breaks /report:
+    the mapping and its payload are the only record of an analysis, so a user
+    who comes back to download the PDF more than a minute later gets a 409
+    "Cached analysis data is missing" for an analysis that succeeded.
+    Retention is therefore driven by CACHE_KEEP_BYTES/CACHE_KEEP_FILES, with
+    the grace window only protecting entries from in-flight requests.
+    """
+    removed = _prune_dir(CACHE_DIR, CACHE_KEEP_BYTES, CACHE_KEEP_FILES)
+    removed += _prune_dir(
+        CACHE_DIR / "_by_id", CACHE_KEEP_BYTES, CACHE_KEEP_FILES * 4
+    )
     return removed
 
 
