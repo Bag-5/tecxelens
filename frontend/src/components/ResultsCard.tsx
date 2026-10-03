@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
+import { motion, useTransform, useMotionValue } from "framer-motion";
 import { useTilt } from "@/hooks/useTilt";
 import type { Finding as FindingType } from "@/lib/api";
 
@@ -59,7 +59,6 @@ function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
 
   const count = useMotionValue(0);
   const rounded = useTransform(count, (v) => Math.round(v));
-  const spring = useSpring(count, { stiffness: 60, damping: 20 });
 
   useEffect(() => {
     count.set(score);

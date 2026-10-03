@@ -33,7 +33,7 @@ export default function AnalyzingAnimation({
     if (!ctx) return;
 
     let animId: number;
-    let dots: Dot[] = [];
+    const dots: Dot[] = [];
     const radius = 72;
     const cx = 96;
     const cy = 96;

@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 
 const BINARY = ["0", "1"];
-const NODE_RADIUS = 3;
 
 interface Node {
   x: number;
@@ -27,7 +26,7 @@ export default function ParticleField({ count = 20 }: { count?: number }) {
     if (!ctx) return;
 
     let animId: number;
-    let nodes: Node[] = [];
+    const nodes: Node[] = [];
     let w = 0;
     let h = 0;
 
