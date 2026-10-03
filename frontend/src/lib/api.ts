@@ -1,4 +1,8 @@
-const _raw = process.env.NEXT_PUBLIC_API_URL || "https://selfless-nature-production-f4d3.up.railway.app";
+// NEXT_PUBLIC_* is inlined at build time, so this must be set as a project env
+// var to take effect. The fallback below is what ships if it is not set.
+// Default points at the self-hosted PythonAnywhere backend; override with
+// NEXT_PUBLIC_API_URL to target a different deployment.
+const _raw = process.env.NEXT_PUBLIC_API_URL || "https://bag5.pythonanywhere.com";
 export const BASE_URL = _raw.replace(/\/+$/, "");
 
 export interface UploadResult {
